@@ -1,7 +1,5 @@
 # nix-moi
 
-Origin: <https://github.com/Aidan-Chelig/nix-moi>
-
 `nix-moi` is a Nix flake for treating machine-specific data as machine-owned state instead of flake-owned configuration.
 
 In practice, that means values like:
@@ -12,6 +10,12 @@ In practice, that means values like:
 - `networking.hostName`
 
 do not need to be committed into a host flake. Instead, this repository provides NixOS modules that read those values from machine-local files under `/etc/nixos/machine`.
+
+## Why "moi"
+
+`moi` stands for "machine owns identity".
+
+That is the core idea of this repository: identity and other machine-local facts belong to the machine being installed or managed, not to the shared flake that describes the system.
 
 ## What it exports
 
