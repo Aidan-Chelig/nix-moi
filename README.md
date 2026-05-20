@@ -111,6 +111,8 @@ Add this flake as an input and import the modules in your host configuration:
 
 With those modules imported, `configuration.nix` can omit hard-coded hostname, state version, and filesystem device declarations, as long as the corresponding files exist under `/etc/nixos/machine`.
 
+Because those values are read from machine-local paths at evaluation time, builds and rebuilds that use these modules need to be run with `--impure`.
+
 ## Provisioning a real machine
 
 Mount the target system at `/mnt` as usual, then write the machine-owned state into that target root:
@@ -138,6 +140,18 @@ nix run github:Aidan-Chelig/nix-moi#machine-filesystems-provision -- \
 - records devices by UUID or label when possible
 
 After that, evaluate or install the host normally with `nixos-install` or `nixos-rebuild`.
+
+In practice, that means using impure evaluation for system builds, for example:
+
+```sh
+sudo nixos-rebuild switch --flake .#my-host --impure
+```
+
+or:
+
+```sh
+sudo nixos-install --flake .#my-host --impure
+```
 
 ## Local evaluation
 
