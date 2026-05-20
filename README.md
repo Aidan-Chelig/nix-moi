@@ -17,6 +17,19 @@ do not need to be committed into a host flake. Instead, this repository provides
 
 That is the core idea of this repository: identity and other machine-local facts belong to the machine being installed or managed, not to the shared flake that describes the system.
 
+## Why use it
+
+This project is useful when you want to reuse a single flake across a fleet of machines without hard-coding per-machine identity into that flake.
+
+Instead of committing separate hostname, `system.stateVersion`, hardware facts, and filesystem layout for every host, you can keep one shared system definition and let each machine provide its own local identity data under `/etc/nixos/machine`.
+
+That makes it easier to:
+
+- reuse the same flake across many similar systems
+- reduce per-host boilerplate in the repository
+- keep installation-time and hardware-specific details with the machine they belong to
+- avoid mixing shared system intent with machine-local state
+
 ## What it exports
 
 This flake exports:
