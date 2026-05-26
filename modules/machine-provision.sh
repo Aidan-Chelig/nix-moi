@@ -5,7 +5,7 @@ usage() {
   cat <<'USAGE'
 machine-provision [OPTIONS]
 
-Writes machine-local identity state for the machine-identity NixOS module.
+Writes machine-local identity state for the nix-moi NixOS modules.
 
 Options:
   --root PATH             Target root to write into. Defaults to /.

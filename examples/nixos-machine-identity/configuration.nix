@@ -12,9 +12,9 @@
 
   services.openssh.enable = true;
 
-  # These values come from lgnix.nixosModules.machine-identity, which reads
-  # /etc/nixos/machine/identity.json on a real host. The checks below make that
-  # dependency visible in this example without hard-coding host identity here.
+  # These values come from nix-moi's machine-hostname and machine-state-version
+  # modules. The checks below make that dependency visible in this example
+  # without hard-coding host identity here.
   assertions = [
     {
       assertion = config.networking.hostName == config.machineIdentity.hostName;

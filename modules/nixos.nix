@@ -12,6 +12,7 @@
         };
       }
     );
+    default = {};
   };
 
   config.flake = {

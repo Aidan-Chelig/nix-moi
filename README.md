@@ -35,6 +35,9 @@ That makes it easier to:
 This flake exports:
 
 - `nixosModules.machine-identity`
+- `nixosModules.machine-hostname`
+- `nixosModules.machine-state-version`
+- `nixosModules.machine-facter`
 - `nixosModules.machine-filesystems`
 - `packages.<system>.machine-provision`
 - `packages.<system>.machine-filesystems-provision`
@@ -69,11 +72,14 @@ Expected shape:
 }
 ```
 
-`machine-identity` uses this to set:
+The identity modules use this to set:
 
-- `networking.hostName`
-- `system.stateVersion`
+- `networking.hostName` with `machine-hostname`
+- `system.stateVersion` with `machine-state-version`
 - `hardware.facter.report` when `facter.json` exists
+
+`machine-identity` is a compatibility module that imports `machine-hostname`,
+`machine-state-version`, and `machine-facter`.
 
 It also exposes:
 
@@ -123,6 +129,35 @@ Add this flake as an input and import the modules in your host configuration:
 ```
 
 With those modules imported, `configuration.nix` can omit hard-coded hostname, state version, and filesystem device declarations, as long as the corresponding files exist under `/etc/nixos/machine`.
+
+You can also opt into the pieces individually:
+
+```nix
+modules = [
+  nix-moi.nixosModules.machine-hostname
+  nix-moi.nixosModules.machine-state-version
+  nix-moi.nixosModules.machine-filesystems
+  ./configuration.nix
+];
+```
+
+Import only the modules whose NixOS settings you want this flake to manage.
+
+For distributable images that have not been provisioned with machine-owned
+state yet, `machine-state-version` can bootstrap the state version from an
+explicit initial value:
+
+```nix
+{
+  machineStateVersion.initial = "25.11";
+}
+```
+
+When `/etc/nixos/machine/identity.json` already contains `stateVersion`, that
+machine-owned value wins. When it is missing, `machine-state-version` uses
+`machineStateVersion.initial` for `system.stateVersion` during evaluation and
+adds an activation script that writes the same value into
+`/etc/nixos/machine/identity.json` if the file still lacks `stateVersion`.
 
 Because those values are read from machine-local paths at evaluation time, builds and rebuilds that use these modules need to be run with `--impure`.
 
@@ -198,11 +233,13 @@ MACHINE_TARGET_ROOT=$target_root \
   nix eval --impure ./examples/nixos-machine-identity#nixosConfigurations.example.config.networking.hostName
 ```
 
-There is also a worked example in [examples/nixos-machine-identity/README.md](/home/icy/development/nix/nix-moi/examples/nixos-machine-identity/README.md).
+There is also a worked example in [examples/nixos-machine-identity/README.md](examples/nixos-machine-identity/README.md).
 
 ## Notes
 
-- `machine-identity` asserts that hostname and state version are present.
+- `machine-hostname` asserts that hostname is present.
+- `machine-state-version` asserts that state version is present unless `machineStateVersion.initial` is set.
+- `machine-identity` imports `machine-hostname`, `machine-state-version`, and `machine-facter`.
 - `machine-filesystems` asserts that `filesystems.json` exists and includes `fileSystems."/"`.
 - `machine-filesystems-provision` is only exposed on Linux systems.
 - `qemu-machine-provision-test` is included for provisioning test workflows.

@@ -1,7 +1,8 @@
 # NixOS Machine State Example
 
-This example consumes `lgnix.nixosModules.machine-identity` and
-`lgnix.nixosModules.machine-filesystems` directly. It keeps hostname,
+This example consumes `nix-moi.nixosModules.machine-hostname`,
+`nix-moi.nixosModules.machine-state-version`, and
+`nix-moi.nixosModules.machine-filesystems` directly. It keeps hostname,
 `system.stateVersion`, and filesystem UUIDs out of `configuration.nix`; those
 values come from machine-local files under `/etc/nixos/machine`.
 
@@ -37,13 +38,13 @@ On a real machine, mount the target filesystems under `/mnt`, then provision the
 machine-local state before evaluating the NixOS configuration:
 
 ```sh
-nix run github:achelig/lgnix2.0#machine-provision -- \
+nix run github:Aidan-Chelig/nix-moi#machine-provision -- \
   --root /mnt \
   --hostname my-host
 
-nix run github:achelig/lgnix2.0#machine-filesystems-provision -- \
+nix run github:Aidan-Chelig/nix-moi#machine-filesystems-provision -- \
   --root /mnt
 ```
 
-Then import the `machine-identity` and `machine-filesystems` modules in that
-host's flake and use `nixos-install` or `nixos-rebuild` as usual.
+Then import the nix-moi modules you want in that host's flake and use
+`nixos-install` or `nixos-rebuild` as usual.
