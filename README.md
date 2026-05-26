@@ -39,6 +39,7 @@ This flake exports:
 - `nixosModules.machine-state-version`
 - `nixosModules.machine-facter`
 - `nixosModules.machine-filesystems`
+- `nixosModules.machine-pull-deploy`
 - `packages.<system>.machine-provision`
 - `packages.<system>.machine-filesystems-provision`
 - `packages.<system>.qemu-machine-provision-test`
@@ -234,6 +235,62 @@ MACHINE_TARGET_ROOT=$target_root \
 ```
 
 There is also a worked example in [examples/nixos-machine-identity/README.md](examples/nixos-machine-identity/README.md).
+
+## Pull deployment
+
+`machine-pull-deploy` installs a systemd service and timer that let a machine
+poll a Git flake, fetch changes, and apply them locally with `nixos-rebuild`.
+This avoids a central CI job evaluating each host's machine-owned state.
+
+Example:
+
+```nix
+{
+  imports = [
+    nix-moi.nixosModules.machine-pull-deploy
+  ];
+
+  machinePullDeploy = {
+    enable = true;
+
+    repository = {
+      url = "git@github.com:example/infrastructure.git";
+      ref = "main";
+      refType = "branch";
+    };
+
+    flakeAttribute = config.networking.hostName;
+    rebuildMode = "switch"; # or "boot"
+    schedule = "hourly";
+    randomizedDelaySec = "30min";
+    fixedRandomDelay = true;
+
+    ssh = {
+      identityFile = "/run/secrets/nix-moi-deploy-key";
+      knownHostsFile = "/etc/ssh/ssh_known_hosts";
+    };
+  };
+}
+```
+
+On each timer run, the service clones or fetches the configured repository into
+`/var/lib/nix-moi/pull-deploy`, resolves the configured branch, tag, or revision,
+and compares it with the last successfully deployed revision. If nothing changed,
+it exits without rebuilding. If the revision changed, it runs:
+
+```sh
+nixos-rebuild switch --flake /var/lib/nix-moi/pull-deploy/repo#HOST --impure
+```
+
+Use `machinePullDeploy.rebuildMode = "boot"` to stage the new generation for the
+next reboot instead of switching immediately.
+
+The timer uses `RandomizedDelaySec` and `FixedRandomDelay` to avoid thundering
+herd deploys across a fleet while keeping each host's offset stable, and the
+service uses `flock` so a slow rebuild cannot overlap with the next poll. Nix
+cache configuration is intentionally left to the consuming system through normal
+`nix.settings`; use `machinePullDeploy.extraRebuildArgs` only for per-command
+overrides.
 
 ## Notes
 
